@@ -38,6 +38,7 @@ instance/
 *.sqlite3
 
 # Uploads
+# Ignore all files in uploads except .gitkeep (used to keep the directory in git)
 uploads/*
 !uploads/.gitkeep
 
