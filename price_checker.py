@@ -64,15 +64,18 @@ class PriceChecker:
         
         return None
     
+    # Replaced bare except with specific exception handling
+
     def _parse_price(self, price_text):
         """Parse price string to float"""
         try:
             # Remove currency symbols and commas
             clean_price = re.sub(r'[^\d.]', '', price_text)
             return float(clean_price)
-        except:
+        except ValueError:
+            # Handle cases where conversion to float fails
             return None
-    
+
     def fetch_image_url(self, url):
         """Fetch main product image from URL"""
         try:
@@ -98,8 +101,10 @@ class PriceChecker:
                     width = img.get('width')
                     if width and int(width) > 200:
                         return src
-            
-            return None
+        except requests.RequestException as e:
+            # Handle HTTP-related exceptions
+            print(f"Error fetching image URL: {e}")
         except Exception as e:
-            print(f"Error fetching image: {e}")
-            return None
+            # Catch other unexpected exceptions
+            print(f"Unexpected error: {e}")
+        return None
