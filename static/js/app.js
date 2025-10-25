@@ -7,9 +7,32 @@ const CURRENCY_SYMBOLS = {
 
 let items = [];
 let currentChart = null;
+// View state management
+let currentView = localStorage.getItem('wishlist-view') || 'grid';
+
+function setView(view) {
+    currentView = view;
+    localStorage.setItem('wishlist-view', view);
+    
+    // Update button states
+    document.getElementById('grid-view-btn').classList.toggle('active', view === 'grid');
+    document.getElementById('list-view-btn').classList.toggle('active', view === 'list');
+    
+    // Re-render items with new view
+    renderItems();
+}
+
+function initializeView() {
+    // Set initial button states
+    document.getElementById('grid-view-btn').classList.toggle('active', currentView === 'grid');
+    document.getElementById('list-view-btn').classList.toggle('active', currentView === 'list');
+}
 
 // Load items on page load
-document.addEventListener('DOMContentLoaded', loadItems);
+document.addEventListener('DOMContentLoaded', () => {
+    initializeView();
+    loadItems();
+});
 
 async function loadItems() {
     try {
@@ -97,30 +120,78 @@ function renderItems() {
                 <p>Add your first item to start tracking prices!</p>
             </div>
         `;
-        updateSummary(); 
+        updateSummary();
         return;
     }
 
-    container.innerHTML = items.map(item => {
-        const currencySymbol = getCurrencySymbol(item.currency);
-        return `
-            <div class="item-card">
-                ${item.image_path ? `<img src="/${item.image_path}" class="item-image" alt="${item.item_name}">` : '<div class="item-image"></div>'}
-                <div class="item-type">${item.item_type}</div>
-                <div class="item-name">${item.item_name}</div>
-                ${item.current_price ? `<div class="item-price">${currencySymbol}${item.current_price.toFixed(2)}</div>` : ''}
-                ${item.last_checked ? `<div class="last-checked">Last checked: ${new Date(item.last_checked).toLocaleDateString()}</div>` : ''}
-                ${item.url ? `<a href="${item.url}" target="_blank" style="color: #667eea; text-decoration: none;">View Product →</a>` : ''}
-                <div class="item-actions">
-                    ${item.url ? `<button onclick="checkPrice(${item.id})">Check Price</button>` : ''}
-                    <button onclick="showHistory(${item.id})">History</button>
-                    <button onclick="deleteItem(${item.id})" style="background: #f56565;">Delete</button>
-                </div>
-            </div>
-        `;
-    }).join('');
+    // Set container class based on view
+    container.className = currentView === 'list' ? 'items-list' : 'items-grid';
     
-    updateSummary(); 
+    if (currentView === 'list') {
+        container.innerHTML = items.map(item => renderListItem(item)).join('');
+    } else {
+        container.innerHTML = items.map(item => renderGridItem(item)).join('');
+    }
+    
+    updateSummary();
+}
+
+function renderGridItem(item) {
+    const currencySymbol = getCurrencySymbol(item.currency);
+    return `
+        <div class="item-card">
+            ${item.image_path ? `<img src="/${item.image_path}" class="item-image" alt="${item.item_name}">` : '<div class="item-image"></div>'}
+            <div class="item-type">${item.item_type}</div>
+            <div class="item-name">${item.item_name}</div>
+            ${item.current_price ? `<div class="item-price">${currencySymbol}${item.current_price.toFixed(2)}</div>` : ''}
+            ${item.last_checked ? `<div class="last-checked">Last checked: ${new Date(item.last_checked).toLocaleDateString()}</div>` : ''}
+            ${item.url ? `<a href="${item.url}" target="_blank" style="color: #667eea; text-decoration: none;">View Product →</a>` : ''}
+            <div class="item-actions">
+                ${item.url ? `<button onclick="checkPrice(${item.id})">Check Price</button>` : ''}
+                <button onclick="showHistory(${item.id})">History</button>
+                <button onclick="deleteItem(${item.id})" style="background: #f56565;">Delete</button>
+            </div>
+        </div>
+    `;
+}
+
+function renderListItem(item) {
+    const currencySymbol = getCurrencySymbol(item.currency);
+    const createdDate = new Date(item.created_at).toLocaleDateString();
+    const lastCheckedDate = item.last_checked ? new Date(item.last_checked).toLocaleDateString() : 'Never';
+    
+    return `
+        <div class="item-card">
+            ${item.image_path ? `<img src="/${item.image_path}" class="item-image" alt="${item.item_name}">` : '<div class="item-image"></div>'}
+            
+            <div class="item-details">
+                <div>
+                    <span class="item-type">${item.item_type}</span>
+                </div>
+                <div class="item-name">${item.item_name}</div>
+                ${item.current_price ? `<div class="item-price">${currencySymbol}${item.current_price.toFixed(2)} ${item.currency}</div>` : '<div style="color: #999;">No price set</div>'}
+                
+                <div class="item-meta">
+                    <div class="item-meta-item">
+                        <span class="item-meta-label">Added:</span>
+                        <span>${createdDate}</span>
+                    </div>
+                    <div class="item-meta-item">
+                        <span class="item-meta-label">Last Checked:</span>
+                        <span>${lastCheckedDate}</span>
+                    </div>
+                </div>
+                
+                ${item.url ? `<a href="${item.url}" target="_blank" style="color: #667eea; text-decoration: none;">🔗 View Product</a>` : ''}
+            </div>
+            
+            <div class="item-actions">
+                ${item.url ? `<button onclick="checkPrice(${item.id})">Check Price</button>` : ''}
+                <button onclick="showHistory(${item.id})">History</button>
+                <button onclick="deleteItem(${item.id})" style="background: #f56565;">Delete</button>
+            </div>
+        </div>
+    `;
 }
 
 function openAddModal() {
