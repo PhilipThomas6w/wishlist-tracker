@@ -18,10 +18,31 @@
             <button class="secondary" onclick="checkAllPrices()">🔄 Check All Prices</button>
         </div>
 
+        <div id="summary-panel" class="summary-panel" style="display: none;">
+            <h2>📊 Wishlist Summary</h2>
+            <div class="summary-stats">
+                <div class="stat-item">
+                    <div class="stat-label">Total Items</div>
+                    <div class="stat-value" id="total-items">0</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-label">Items with Prices</div>
+                    <div class="stat-value" id="items-with-prices">0</div>
+                </div>
+            </div>
+            <div class="currency-breakdown" id="currency-breakdown"></div>
+        </div>
+
+        <div id="items-container" class="items-grid">
+            <div class="loading">Loading your wishlist...</div>
+        </div>
+
         <div id="items-container" class="items-grid">
             <div class="loading">Loading your wishlist...</div>
         </div>
     </div>
+
+
 
     <!-- Add Item Modal -->
     <div id="add-modal" class="modal">

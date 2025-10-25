@@ -25,6 +25,65 @@ function getCurrencySymbol(currency) {
     return CURRENCY_SYMBOLS[currency] || currency;
 }
 
+function calculateTotals() {
+    const totalItems = items.length;
+    const itemsWithPrices = items.filter(item => item.current_price).length;
+    
+    // Calculate totals per currency
+    const currencyTotals = {};
+    items.forEach(item => {
+        if (item.current_price && item.currency) {
+            if (!currencyTotals[item.currency]) {
+                currencyTotals[item.currency] = 0;
+            }
+            currencyTotals[item.currency] += item.current_price;
+        }
+    });
+    
+    return {
+        totalItems,
+        itemsWithPrices,
+        currencyTotals
+    };
+}
+
+function updateSummary() {
+    const summary = calculateTotals();
+    const summaryPanel = document.getElementById('summary-panel');
+    
+    // Show/hide panel based on whether there are items
+    if (summary.totalItems === 0) {
+        summaryPanel.style.display = 'none';
+        return;
+    }
+    
+    summaryPanel.style.display = 'block';
+    
+    // Update stats
+    document.getElementById('total-items').textContent = summary.totalItems;
+    document.getElementById('items-with-prices').textContent = summary.itemsWithPrices;
+    
+    // Update currency breakdown
+    const breakdownContainer = document.getElementById('currency-breakdown');
+    
+    if (Object.keys(summary.currencyTotals).length === 0) {
+        breakdownContainer.innerHTML = '<div style="opacity: 0.8; font-size: 0.95em;">No items with prices yet</div>';
+    } else {
+        breakdownContainer.innerHTML = Object.entries(summary.currencyTotals)
+            .map(([currency, total]) => {
+                const symbol = getCurrencySymbol(currency);
+                return `
+                    <div class="currency-item">
+                        <div class="currency-symbol">${symbol}</div>
+                        <div class="currency-amount">${total.toFixed(2)}</div>
+                        <div style="opacity: 0.8; font-size: 0.9em;">${currency}</div>
+                    </div>
+                `;
+            })
+            .join('');
+    }
+}
+
 function renderItems() {
     const container = document.getElementById('items-container');
     
@@ -38,6 +97,7 @@ function renderItems() {
                 <p>Add your first item to start tracking prices!</p>
             </div>
         `;
+        updateSummary(); 
         return;
     }
 
@@ -59,6 +119,8 @@ function renderItems() {
             </div>
         `;
     }).join('');
+    
+    updateSummary(); 
 }
 
 function openAddModal() {
