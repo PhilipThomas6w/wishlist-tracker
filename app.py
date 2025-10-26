@@ -56,12 +56,33 @@ def index():
 
 @app.route('/api/items', methods=['GET'])
 def get_items():
-    items = WishlistItem.query.all()
+    items = WishlistItem.query.order_by(WishlistItem.order_index).all()  # ORDER BY order_index
     return jsonify([item.to_dict() for item in items])
+
+# ADD THIS NEW ENDPOINT
+@app.route('/api/items/reorder', methods=['POST'])
+def reorder_items():
+    data = request.json
+    item_ids = data.get('item_ids', [])
+    
+    try:
+        for index, item_id in enumerate(item_ids):
+            item = WishlistItem.query.get(item_id)
+            if item:
+                item.order_index = index
+        
+        db.session.commit()
+        return jsonify({'success': True})
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'success': False, 'error': str(e)}), 400
 
 @app.route('/api/items', methods=['POST'])
 def add_item():
     data = request.form
+    
+    # Get the highest order_index and add 1
+    max_order = db.session.query(db.func.max(WishlistItem.order_index)).scalar() or -1
     
     # Create new item
     item = WishlistItem(
@@ -69,7 +90,8 @@ def add_item():
         item_name=data.get('item_name'),
         url=data.get('url'),
         current_price=float(data.get('current_price')) if data.get('current_price') else None,
-        currency=data.get('currency', 'GBP')
+        currency=data.get('currency', 'GBP'),
+        order_index=max_order + 1  # ADD THIS LINE
     )
     
     # Handle image upload

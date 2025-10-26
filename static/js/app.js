@@ -9,6 +9,110 @@ let items = [];
 let currentChart = null;
 // View state management
 let currentView = localStorage.getItem('wishlist-view') || 'grid';
+// Reorder mode state
+let isReorderMode = false;
+let sortableInstance = null;
+let originalOrder = [];
+
+function toggleReorderMode() {
+    isReorderMode = !isReorderMode;
+    const container = document.getElementById('items-container');
+    const reorderBtn = document.getElementById('reorder-btn');
+    const instructions = document.getElementById('reorder-instructions');
+    
+    if (isReorderMode) {
+        // Enter reorder mode
+        container.classList.add('reorder-mode');
+        instructions.classList.add('active');
+        reorderBtn.textContent = '💾 Save Order';
+        reorderBtn.style.background = '#48bb78';
+        
+        // Store original order
+        originalOrder = [...items];
+        
+        // Initialize SortableJS
+        sortableInstance = new Sortable(container, {
+            animation: 150,
+            ghostClass: 'sortable-ghost',
+            dragClass: 'sortable-drag',
+            handle: '.item-card',
+            onEnd: function(evt) {
+                // Update items array based on new order
+                const newOrder = Array.from(container.children).map(card => {
+                    const itemId = parseInt(card.querySelector('.item-actions button').getAttribute('onclick').match(/\d+/)[0]);
+                    return items.find(item => item.id === itemId);
+                });
+                items = newOrder;
+            }
+        });
+    } else {
+        // Exit reorder mode - save
+        saveOrder();
+    }
+}
+
+function cancelReorder() {
+    isReorderMode = false;
+    const container = document.getElementById('items-container');
+    const reorderBtn = document.getElementById('reorder-btn');
+    const instructions = document.getElementById('reorder-instructions');
+    
+    container.classList.remove('reorder-mode');
+    instructions.classList.remove('active');
+    reorderBtn.textContent = '↕️ Reorder';
+    reorderBtn.style.background = '#48bb78';
+    
+    // Restore original order
+    items = [...originalOrder];
+    
+    if (sortableInstance) {
+        sortableInstance.destroy();
+        sortableInstance = null;
+    }
+    
+    renderItems();
+}
+
+async function saveOrder() {
+    const container = document.getElementById('items-container');
+    const reorderBtn = document.getElementById('reorder-btn');
+    const instructions = document.getElementById('reorder-instructions');
+    
+    // Get item IDs in current order
+    const itemIds = items.map(item => item.id);
+    
+    try {
+        const response = await fetch('/api/items/reorder', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ item_ids: itemIds })
+        });
+        
+        if (response.ok) {
+            // Exit reorder mode
+            container.classList.remove('reorder-mode');
+            instructions.classList.remove('active');
+            reorderBtn.textContent = '↕️ Reorder';
+            reorderBtn.style.background = '#48bb78';
+            isReorderMode = false;
+            
+            if (sortableInstance) {
+                sortableInstance.destroy();
+                sortableInstance = null;
+            }
+            
+            // Reload to confirm new order
+            await loadItems();
+        } else {
+            alert('Failed to save order. Please try again.');
+        }
+    } catch (error) {
+        console.error('Error saving order:', error);
+        alert('Failed to save order. Please try again.');
+    }
+}
 
 function setView(view) {
     currentView = view;
@@ -139,7 +243,7 @@ function renderItems() {
 function renderGridItem(item) {
     const currencySymbol = getCurrencySymbol(item.currency);
     return `
-        <div class="item-card">
+        <div class="item-card" data-id="${item.id}">
             ${item.image_path ? `<img src="/${item.image_path}" class="item-image" alt="${item.item_name}">` : '<div class="item-image"></div>'}
             <div class="item-type">${item.item_type}</div>
             <div class="item-name">${item.item_name}</div>
@@ -161,7 +265,7 @@ function renderListItem(item) {
     const lastCheckedDate = item.last_checked ? new Date(item.last_checked).toLocaleDateString() : 'Never';
     
     return `
-        <div class="item-card">
+        <div class="item-card" data-id="${item.id}">
             ${item.image_path ? `<img src="/${item.image_path}" class="item-image" alt="${item.item_name}">` : '<div class="item-image"></div>'}
             
             <div class="item-details">

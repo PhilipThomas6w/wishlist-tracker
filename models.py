@@ -15,6 +15,7 @@ class WishlistItem(db.Model):
     currency = db.Column(db.String(10), default='USD')
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     last_checked = db.Column(db.DateTime)
+    order_index = db.Column(db.Integer, default=0)  # ADD THIS LINE
     
     # Relationship
     price_history = db.relationship('PriceHistory', backref='item', lazy=True, cascade='all, delete-orphan')
@@ -29,7 +30,8 @@ class WishlistItem(db.Model):
             'current_price': self.current_price,
             'currency': self.currency,
             'created_at': self.created_at.isoformat() if self.created_at else None,
-            'last_checked': self.last_checked.isoformat() if self.last_checked else None
+            'last_checked': self.last_checked.isoformat() if self.last_checked else None,
+            'order_index': self.order_index  # ADD THIS LINE
         }
 
 class PriceHistory(db.Model):

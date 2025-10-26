@@ -6,6 +6,7 @@
     <title>Wishlist Tracker</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
 </head>
 <body>
     <div class="container">
@@ -16,6 +17,7 @@
             <button onclick="openAddModal()">+ Add Item</button>
             <button class="secondary" onclick="exportCSV()">📊 Export CSV</button>
             <button class="secondary" onclick="checkAllPrices()">🔄 Check All Prices</button>
+            <button id="reorder-btn" class="secondary" onclick="toggleReorderMode()">↕️ Reorder</button>
             
             <div class="view-toggle">
                 <button id="grid-view-btn" class="active" onclick="setView('grid')" title="Grid View">
@@ -39,6 +41,15 @@
             </div>
         </div>
 
+        <div id="reorder-instructions" class="reorder-instructions">
+            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+            </svg>
+            <div>
+                <strong>Reorder Mode Active:</strong> Drag and drop items to change their order. Click "Save Order" when done.
+            </div>
+        </div>
+
         <div id="summary-panel" class="summary-panel" style="display: none;">
             <h2>📊 Wishlist Summary</h2>
             <div class="summary-stats">
@@ -57,12 +68,9 @@
         <div id="items-container" class="items-grid">
             <div class="loading">Loading your wishlist...</div>
         </div>
-
-        <div id="items-container" class="items-grid">
-            <div class="loading">Loading your wishlist...</div>
-        </div>
     </div>
 
+    <!-- Add Item Modal -->
     <div id="add-modal" class="modal">
         <div class="modal-content">
             <div class="modal-header">
@@ -123,6 +131,7 @@
         </div>
     </div>
 
+    <!-- Price History Modal -->
     <div id="history-modal" class="modal">
         <div class="modal-content">
             <div class="modal-header">

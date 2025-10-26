@@ -416,6 +416,53 @@ input:focus, select:focus {
     }
 }
 
+.reorder-mode .item-card {
+    cursor: move;
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.reorder-mode .item-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 5px 20px rgba(0,0,0,0.15);
+}
+
+.reorder-mode .item-actions {
+    pointer-events: none;
+    opacity: 0.5;
+}
+
+.sortable-ghost {
+    opacity: 0.4;
+    background: #f0f4ff;
+}
+
+.sortable-drag {
+    opacity: 0.8;
+    transform: rotate(2deg);
+}
+
+.reorder-instructions {
+    background: #fff3cd;
+    border: 2px solid #ffc107;
+    border-radius: 8px;
+    padding: 12px 20px;
+    margin-bottom: 20px;
+    display: none;
+    align-items: center;
+    gap: 10px;
+    color: #856404;
+}
+
+.reorder-instructions.active {
+    display: flex;
+}
+
+.reorder-instructions svg {
+    width: 24px;
+    height: 24px;
+    flex-shrink: 0;
+}
+
 @media (max-width: 768px) {
     .items-grid {
         grid-template-columns: 1fr;
