@@ -102,10 +102,6 @@ The SQLite database file is stored in `instance/wishlist.db`. This single file c
 - Images are stored locally in the `uploads/` folder
 - Scheduled price checks run every 24 hours while the app is running
 
-## License
-
-This project is open source and available under the MIT License.
-
 ## Contributing
 
 Contributions, issues, and feature requests are welcome!
